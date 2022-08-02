@@ -44,7 +44,7 @@ defmodule Noisemaker.Driver do
   end
 
   @impl true
-  def handle_info({:circuits_gpio, pin, 1}, state) do
+  def handle_info({:circuits_gpio, pin, _, 1}, state) do
     state.mapping[pin].()
     state
   end
