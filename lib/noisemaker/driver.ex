@@ -36,7 +36,7 @@ defmodule Noisemaker.Driver do
     mapping = create_mapping(opts)
     pins = for {n, _cb} <- mapping do
       {:ok, pin} = GPIO.open(n, :input, pull_mode: :pullup)
-      :ok = GPIO.set_interrupts(pin, :rising)
+      :ok = GPIO.set_interrupts(pin, :falling)
       pin
     end
 
@@ -44,7 +44,7 @@ defmodule Noisemaker.Driver do
   end
 
   @impl true
-  def handle_info({:circuits_gpio, pin, _, 1}, state) do
+  def handle_info({:circuits_gpio, pin, _, 0}, state) do
     state.mapping[pin].()
     {:noreply, state}
   end
