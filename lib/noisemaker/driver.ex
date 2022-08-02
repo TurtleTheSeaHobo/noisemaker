@@ -35,7 +35,7 @@ defmodule Noisemaker.Driver do
     opts = Keyword.merge(@default_opts, opts)
     mapping = create_mapping(opts)
     pins = for {n, _cb} <- mapping do
-      {:ok, pin} = GPIO.open(n, :input)
+      {:ok, pin} = GPIO.open(n, :input, pull_mode: :pulldown)
       :ok = GPIO.set_interrupts(pin, :falling)
       pin
     end
