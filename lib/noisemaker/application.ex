@@ -5,6 +5,7 @@ defmodule Noisemaker.Application do
   def start(_type, _args) do
     children = [
       Noisemaker.Driver,
+      Noisemaker.Player,
     ]
     opts = [strategy: :one_for_one, name: Noisemaker.Supervisor]
 
