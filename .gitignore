@@ -26,4 +26,4 @@ noisemaker-*.tar
 /tmp/
 
 # Test audio files
-*.wav
+/audio/*

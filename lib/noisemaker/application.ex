@@ -4,8 +4,10 @@ defmodule Noisemaker.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      Noisemaker.Driver,
+      # Noisemaker.Driver,
       Noisemaker.Player,
+      Noisemaker.FTP,
+      Noisemaker.Controller,
     ]
     opts = [strategy: :one_for_one, name: Noisemaker.Supervisor]
 

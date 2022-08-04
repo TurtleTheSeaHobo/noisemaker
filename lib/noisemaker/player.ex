@@ -18,6 +18,10 @@ defmodule Noisemaker.Player do
   def play(pid \\ Noisemaker.Player, path) do
     GenServer.cast(pid, {:play, path})
   end
+
+  def volume(pid \\ Noisemaker.Player, volume) do
+    GenServer.cast(pid, {:volume, volume})
+  end
   
   @impl true
   def init(_opts) do
@@ -27,28 +31,28 @@ defmodule Noisemaker.Player do
   @impl true
   def handle_cast({:play, path}, state) do
     case state do
-      {:playing, port} -> :ok = stop_playback(port)
+      {:playing, port} -> 
+        {:os_pid, os_pid} = Port.info(port, :os_pid)
+        Port.close(port)
+        System.cmd("kill", ["#{os_pid}"]) 
       :idle -> nil
     end
 
-    {:ok, port} = start_playback(path)
+    port = Port.open(
+      {:spawn, "aplay -qD pulse #{path}"}, 
+      [:binary, :exit_status]
+    )
+
     {:noreply, {:playing, port}}
+  end
+
+  def handle_cast({:volume, volume}, state) do
+    System.cmd("amixer", ["-qD", "pulse", "sset", "Master", "#{volume}%"])
+    {:noreply, state}
   end
 
   @impl true
   def handle_info({port, {:exit_status, 0}}, {:playing, port}) do
     {:noreply, :idle}
-  end
-
-  defp start_playback(path) do
-    {:ok, Port.open({:spawn, "aplay -qD pulse #{path}"}, [:binary, :exit_status])}
-  end
-
-  defp stop_playback(port) do
-    {:os_pid, os_pid} = Port.info(port, :os_pid)
-    Port.close(port)
-    System.cmd("kill", ["#{os_pid}"]) 
-
-    :ok
   end
 end
