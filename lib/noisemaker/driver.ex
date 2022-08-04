@@ -12,7 +12,7 @@ defmodule Noisemaker.Driver do
     led_odd_pin: 15, 
   ]
 
-  defstruct [:mapping, :pins]
+  defstruct [:mapping, :leds]
 
   def child_spec(opts) do
     %{
@@ -25,25 +25,47 @@ defmodule Noisemaker.Driver do
   end
 
   def start_link(opts) do
-    GenServer.start_link(__MODULE__, opts)
+    GenServer.start_link(__MODULE__, opts, name: __MODULE__)
+  end
+
+  def led(pid \\ __MODULE__, even, odd) do
+    GenServer.cast(pid, {:led, even, odd}) 
   end
   
   @impl true
   def init(opts) do
     opts = Keyword.merge(@default_opts, opts)
     mapping = create_mapping(opts)
-    pins = for {n, _cb} <- mapping do
+    
+    for {n, _cb} <- mapping do
       {:ok, pin} = GPIO.open(n, :input)
       :ok = GPIO.set_interrupts(pin, :falling)
       pin
     end
 
-    {:ok, %__MODULE__{mapping: mapping, pins: pins}}
+    {:ok, led_even_pin} = GPIO.open(opts[:led_even_pin], :output)
+    {:ok, led_odd_pin} = GPIO.open(opts[:led_odd_pin], :output)
+
+    state = %__MODULE__{
+      mapping: mapping,
+      leds: {led_even_pin, led_odd_pin},
+    }
+
+    {:ok, state}
   end
 
   @impl true
   def handle_info({:circuits_gpio, pin, _, 0}, state) do
     state.mapping[pin].()
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_cast({:led, even, odd}, state) do
+    {even_pin, odd_pin} = state.leds
+    GPIO.write(even_pin, even)
+    GPIO.write(odd_pin, odd)
+
     {:noreply, state}
   end
 
