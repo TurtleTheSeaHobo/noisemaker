@@ -15,12 +15,12 @@ defmodule Noisemaker.Player do
     GenServer.start_link(__MODULE__, opts, name: __MODULE__)
   end
 
-  def play(pid \\ Noisemaker.Player, path) do
-    GenServer.cast(pid, {:play, path})
+  def play(path, cb \\ nil) do
+    GenServer.cast(__MODULE__, {:play, path, cb})
   end
 
-  def volume(pid \\ Noisemaker.Player, volume) do
-    GenServer.cast(pid, {:volume, volume})
+  def volume(volume) do
+    GenServer.cast(__MODULE__, {:volume, volume})
   end
   
   @impl true
@@ -29,9 +29,9 @@ defmodule Noisemaker.Player do
   end
 
   @impl true
-  def handle_cast({:play, path}, state) do
+  def handle_cast({:play, path, cb}, state) do
     case state do
-      {:playing, port} -> 
+      {:playing, port, _cb} -> 
         {:os_pid, os_pid} = Port.info(port, :os_pid)
         Port.close(port)
         System.cmd("kill", ["#{os_pid}"]) 
@@ -43,7 +43,7 @@ defmodule Noisemaker.Player do
       [:binary, :exit_status]
     )
 
-    {:noreply, {:playing, port}}
+    {:noreply, {:playing, port, cb}}
   end
 
   def handle_cast({:volume, volume}, state) do
@@ -52,7 +52,8 @@ defmodule Noisemaker.Player do
   end
 
   @impl true
-  def handle_info({port, {:exit_status, 0}}, {:playing, port}) do
+  def handle_info({port, {:exit_status, 0}}, {:playing, port, cb}) do
+    if cb, do: cb.()
     {:noreply, :idle}
   end
 end

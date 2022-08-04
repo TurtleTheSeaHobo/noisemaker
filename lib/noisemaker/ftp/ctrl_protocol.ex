@@ -68,7 +68,7 @@ defmodule Noisemaker.FTP.CtrlProtocol do
 
   def handle_info({:store_complete, file_name, size}, conn) do
     send_response(250, "file \"#{file_name}\" (#{size} bytes) received", conn)
-    Noisemaker.Player.play("ftp/#{file_name}")
+    # Noisemaker.Player.play("audio/#{file_name}")
     {:noreply, conn} 
   end
 

@@ -1,8 +1,9 @@
 defmodule Noisemaker.Controller do
   use GenServer
+  alias Noisemaker.Driver
   alias Noisemaker.Player
   alias Noisemaker.FTP
-  defstruct [:volume, :bank, :ftp]
+  defstruct [:volume, :bank, :led_timer, :ftp]
 
   @default_opts [
     initial_volume: 80,
@@ -38,6 +39,10 @@ defmodule Noisemaker.Controller do
     GenServer.cast(__MODULE__, :mode)
   end
 
+  def stop_blink() do
+    GenServer.cast(__MODULE__, :stop_blink)
+  end
+
   @impl true
   def init(opts) do
     opts = Keyword.merge(@default_opts, opts)
@@ -55,8 +60,9 @@ defmodule Noisemaker.Controller do
   @impl true
   def handle_cast({:select, n}, state) do
     id = n + state.bank * 8
-    Player.play("audio/select_#{id}")
-    {:noreply, state}
+    Player.play("audio/select_#{id}", fn -> stop_blink() end)
+
+    {:noreply, start_blink(state)}
   end
 
   def handle_cast(:volume, state) do
@@ -83,5 +89,36 @@ defmodule Noisemaker.Controller do
       Player.play("audio/ftp_disabled.wav")
       {:noreply, %__MODULE__{state | ftp: false}}
     end
+  end
+
+  def handle_cast(:stop_blink, state) do
+    if state.led_timer do
+      Driver.led(0, 0)
+      Process.cancel_timer(state.led_timer)
+    end
+
+    {:noreply, %__MODULE__{state | led_timer: nil}}
+  end
+
+  @impl true
+  def handle_info({:cont_blink, {even, odd}}, state) do
+    Driver.led(even, odd)
+
+    next = case {even, odd} do
+      {1, 0} -> {0, 1}
+      {0, 1} -> {1, 0}
+    end
+
+    Process.send_after(self(), {:cont_blink, next}, 42)
+
+    {:noreply, state}
+  end
+
+  def start_blink(state) do
+    Driver.led(1, 1)
+    # 24 Hz = about 42 ms
+    timer = Process.send_after(self(), {:cont_blink, {1, 0}}, 42)
+    
+    %__MODULE__{state | led_timer: timer}
   end
 end
