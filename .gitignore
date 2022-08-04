@@ -24,6 +24,3 @@ noisemaker-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
-
-# Test audio files
-/audio/*
