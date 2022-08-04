@@ -8,8 +8,8 @@ defmodule Noisemaker.Driver do
     bank_pins: [22, 23],
     volume_pin: 12,
     mode_pin: 13,
-    led_even_pin: 14,
-    led_odd_pin: 15, 
+    led_even_pin: 23,
+    led_odd_pin: 24, 
   ]
 
   defstruct [:mapping, :leds]
