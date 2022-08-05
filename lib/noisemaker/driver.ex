@@ -55,6 +55,8 @@ defmodule Noisemaker.Driver do
 
   @impl true
   def handle_info({:circuits_gpio, pin, _, value}, state) do
+    IO.puts "interrupt pin state: #{pin} = #{value}"
+
     if state.timers[pin] do
       Process.cancel_timer(state.timers[pin])
     end
