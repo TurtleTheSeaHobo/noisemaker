@@ -23,11 +23,11 @@ defmodule Noisemaker.Controller do
     GenServer.start_link(__MODULE__, opts, name: __MODULE__)
   end
 
-  def button(symbol, 1) do
+  def button(symbol, 0) do
     GenServer.cast(__MODULE__, {:depress, symbol})
   end
 
-  def button(symbol, 0) do
+  def button(symbol, 1) do
     GenServer.cast(__MODULE__, {:release, symbol})
   end
 
@@ -60,6 +60,10 @@ defmodule Noisemaker.Controller do
     end
 
     {:noreply, new_state}
+  end
+
+  def handle_cast({:release, _symbol}, state) do
+    {:noreply, state}
   end
 
   def handle_cast(:stop_blink, state) do
