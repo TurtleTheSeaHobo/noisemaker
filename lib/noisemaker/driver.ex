@@ -35,14 +35,10 @@ defmodule Noisemaker.Driver do
   def init(opts) do
     opts = Keyword.merge(@default_opts, opts)
     
-    button_pins = for n <- opts[:button_pins] do
+    timers = for n <- opts[:button_pins], into: %{} do
       {:ok, pin} = GPIO.open(n, :input, pull_mode: :pullup)
       :ok = GPIO.set_interrupts(pin, :both)
-      pin
-    end
-
-    timers = for pin <- button_pins, into: %{} do
-      {pin, nil}
+      {n, nil}
     end
 
     {led_even, led_odd} = opts[:led_pins]
