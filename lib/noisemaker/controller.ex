@@ -6,7 +6,7 @@ defmodule Noisemaker.Controller do
   defstruct [:volume, :bank, :led_timer, :ftp]
 
   @default_opts [
-    initial_volume: 80,
+    initial_volume: 75,
   ]
 
   def child_spec(opts) do
@@ -69,7 +69,7 @@ defmodule Noisemaker.Controller do
     volume = if state.volume == 100 do
       0
     else
-      state.volume + 10
+      state.volume + 25
     end
     Player.volume(volume)
     {:noreply, %__MODULE__{state | volume: volume}}
