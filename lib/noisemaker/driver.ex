@@ -7,7 +7,7 @@ defmodule Noisemaker.Driver do
     #select_pins: [4, 5, 6, 7, 8, 9, 10, 11, 22, 23],
     #volume_pin: 12,
     #mode_pin: 13,
-    button_pins: [4, 5, 6, 7, 8, 9, 10, 11, 12], #, 13, 16, 22, 23],
+    button_pins: [4, 5, 6, 22, 27, 9, 10, 11, 12], #, 13, 16, 22, 23],
     led_pins: {24, 25}, 
   ]
 
