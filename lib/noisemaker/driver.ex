@@ -1,7 +1,7 @@
 defmodule Noisemaker.Driver do
   use GenServer
   alias Circuits.GPIO
-  #alias Noisemaker.Controller
+  alias Noisemaker.Controller
 
   @default_opts [
     #select_pins: [4, 5, 6, 7, 8, 9, 10, 11, 22, 23],
@@ -10,6 +10,22 @@ defmodule Noisemaker.Driver do
     button_pins: [4, 5, 6, 22, 27, 9, 10, 11, 12, 13, 16, 22, 23],
     led_pins: {24, 25}, 
   ]
+
+  @pin_map %{
+    4  => {:select, 0},
+    5  => {:select, 1},
+    6  => {:select, 2},
+    22 => {:select, 3},
+    27 => {:select, 4},
+    9  => {:select, 5},
+    10 => {:select, 6},
+    11 => {:select, 7},
+    12 => :volume,
+    13 => :mode_select,
+    16 => :lever,
+    22 => {:star, 0},
+    23 => {:star, 1},
+  }
 
   defstruct [:leds, :timers, :buttons]
 
@@ -72,6 +88,9 @@ defmodule Noisemaker.Driver do
 
   def handle_info({:debounced, pin, value}, state) do
     IO.puts "debounced pin state: #{pin} = #{value}"
+    symbol = @pin_map[pin]
+    Controller.button(symbol, value)
+
     {:noreply, state}
   end
 

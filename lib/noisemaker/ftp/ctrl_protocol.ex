@@ -16,16 +16,7 @@ defmodule Noisemaker.FTP.CtrlProtocol do
 
   @impl true
   def init({_ref, transport, opts} = arg) do
-    host_ip = Keyword.get_lazy(opts, :host, fn ->
-      {:ok, addrs} = :inet.getifaddrs()
-      
-      hd(for {_, if_opts} <- addrs,
-          addr = if_opts[:addr],
-          tuple_size(addr) == 4,
-          addr != {127, 0, 0, 1} do
-        addr
-      end)
-    end)
+    host_ip = Keyword.get_lazy(opts, :host, fn -> FTP.host_ip() end)
 
     conn = %__MODULE__{
       transport: transport, 

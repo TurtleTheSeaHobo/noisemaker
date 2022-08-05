@@ -3,7 +3,7 @@ defmodule Noisemaker.Controller do
   alias Noisemaker.Driver
   alias Noisemaker.Player
   alias Noisemaker.FTP
-  defstruct [:volume, :bank, :led_timer, :ftp]
+  defstruct [:volume, :bank, :led_timer, :combo, :combo_timer, :ftp]
 
   @default_opts [
     initial_volume: 75,
@@ -23,20 +23,12 @@ defmodule Noisemaker.Controller do
     GenServer.start_link(__MODULE__, opts, name: __MODULE__)
   end
 
-  def select(n) do
-    GenServer.cast(__MODULE__, {:select, n})
-  end
-  
-  def volume() do
-    GenServer.cast(__MODULE__, :volume)
+  def button(symbol, 1) do
+    GenServer.cast(__MODULE__, {:depress, symbol})
   end
 
-  def bank(n) do
-    GenServer.cast(__MODULE__, {:bank, n})
-  end
-
-  def mode() do
-    GenServer.cast(__MODULE__, :mode)
+  def button(symbol, 0) do
+    GenServer.cast(__MODULE__, {:release, symbol})
   end
 
   def stop_blink() do
@@ -58,37 +50,16 @@ defmodule Noisemaker.Controller do
   end
 
   @impl true
-  def handle_cast({:select, n}, state) do
-    id = n + state.bank * 8
-    Player.play("audio/select_#{id}", fn -> stop_blink() end)
-
-    {:noreply, start_blink(state)}
-  end
-
-  def handle_cast(:volume, state) do
-    volume = if state.volume == 100 do
-      0
-    else
-      state.volume + 25
+  def handle_cast({:depress, symbol}, state) do
+    new_state = case symbol do
+      {:select, n} -> select(n, state)
+      {:star, n} -> star(n, state)
+      :lever -> lever(state)
+      :volume -> volume(state)
+      :mode_select -> mode_select(state)
     end
-    Player.volume(volume)
-    {:noreply, %__MODULE__{state | volume: volume}}
-  end
 
-  def handle_cast({:bank, n}, state) do
-    {:noreply, %__MODULE__{state | bank: n}}
-  end
-
-  def handle_cast(:mode, state) do
-    if not state.ftp do
-      FTP.resume()
-      Player.play("audio/ftp_enabled.wav")
-      {:noreply, %__MODULE__{state | ftp: true}}
-    else
-      FTP.suspend()
-      Player.play("audio/ftp_disabled.wav")
-      {:noreply, %__MODULE__{state | ftp: false}}
-    end
+    {:noreply, new_state}
   end
 
   def handle_cast(:stop_blink, state) do
@@ -100,6 +71,53 @@ defmodule Noisemaker.Controller do
     {:noreply, %__MODULE__{state | led_timer: nil}}
   end
 
+
+  defp volume(state) do
+    volume = if state.volume == 100, do: 0, else: state.volume + 25
+    Player.volume(volume)
+
+    %__MODULE__{state | volume: volume}
+  end
+
+  defp select(n, state) do
+    if state.bank == 2 do
+      # bank 2 is a dummy bank with no sound 
+      state
+    else
+      id = n + state.bank * 8
+      Player.play("audio/select_#{id}", fn -> stop_blink() end)
+
+      start_blink(state)
+    end
+  end
+
+  defp star(n, state) do
+    if state.combo do
+      Process.cancel_timer(state.combo_timer)
+
+      case n do
+        0 -> toggle_ftp(state)
+        1 -> say_ip(state)
+      end
+    else
+      Player.play("audio/star_#{n}", fn -> stop_blink() end)
+    
+      start_blink(state)
+    end
+  end
+
+  defp lever(state) do
+    Player.play("audio/lever", fn -> stop_blink() end)
+
+    start_blink(state)
+  end
+
+  defp mode_select(state) do
+    timer = Process.send_after(self(), :combo_timeout, 200)
+
+    %__MODULE__{state | combo_timer: timer}
+  end
+  
   @impl true
   def handle_info({:cont_blink, {even, odd}}, state) do
     Driver.led(even, odd)
@@ -114,11 +132,56 @@ defmodule Noisemaker.Controller do
     {:noreply, state}
   end
 
+  def handle_info(:combo_timeout, state) do
+    # not a combo, that means cycle the bank
+    bank = if state.bank == 2, do: 0, else: state.bank + 1
+
+    {:noreply, %__MODULE__{state | bank: bank}}
+  end
+
   def start_blink(state) do
     Driver.led(1, 1)
     # 24 Hz = about 42 ms
     timer = Process.send_after(self(), {:cont_blink, {1, 0}}, 42)
     
     %__MODULE__{state | led_timer: timer}
+  end
+
+  defp toggle_ftp(state) do
+    if state.ftp do
+      FTP.suspend()
+      Player.play("audio/ftp_disabled.wav")
+      %__MODULE__{state | ftp: false}
+    else
+      FTP.resume()
+      Player.play("audio/ftp_enabled.wav")
+      %__MODULE__{state | ftp: true}
+    end
+  end
+
+  def say_ip(state) do
+    say_list = FTP.host_ip()
+               |> Tuple.to_list()
+               |> Enum.map(&Integer.digits(&1))
+               |> Enum.intersperse(["dot"])
+               |> List.flatten()
+               |> Enum.map(fn x -> "audio/ip/#{x}.wav" end) 
+
+    say(say_list)
+    state
+  end
+
+  defp say(list) do
+    list
+    |> Enum.reverse()
+    |> say(nil)
+  end
+
+  defp say([], cb) do
+    cb.()
+  end
+
+  defp say([h | t], cb) do
+    say(t, fn -> Player.play(h, cb) end)
   end
 end

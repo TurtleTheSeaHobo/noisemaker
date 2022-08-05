@@ -17,7 +17,7 @@ defmodule Noisemaker.FTP.CtrlListener do
     :ranch.start_listener(
       :ftp_server_ctrl, :ranch_tcp, 
       ranch_opts, FTP.CtrlProtocol, 
-      [host: {127, 0, 0, 1}, data_port: opts[:data_port]]
+      [data_port: opts[:data_port]]
     )
   end
 end
