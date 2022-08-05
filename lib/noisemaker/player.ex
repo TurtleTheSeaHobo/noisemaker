@@ -39,7 +39,7 @@ defmodule Noisemaker.Player do
     end
 
     port = Port.open(
-      {:spawn, "aplay -qD pulse #{path}"}, 
+      {:spawn, "aplay -q #{path}"}, 
       [:binary, :exit_status]
     )
 
@@ -47,7 +47,7 @@ defmodule Noisemaker.Player do
   end
 
   def handle_cast({:volume, volume}, state) do
-    System.cmd("amixer", ["-qD", "pulse", "sset", "Master", "#{volume}%"])
+    System.cmd("amixer", ["-q", "sset", "Master", "#{volume}%"])
     {:noreply, state}
   end
 
