@@ -7,7 +7,7 @@ defmodule Noisemaker.Driver do
     #select_pins: [4, 5, 6, 7, 8, 9, 10, 11, 22, 23],
     #volume_pin: 12,
     #mode_pin: 13,
-    button_pins: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 16, 22, 23],
+    button_pins: [4, 5, 6, 7, 8, 9, 10, 11, 12], #, 13, 16, 22, 23],
     led_pins: {24, 25}, 
   ]
 
@@ -45,8 +45,9 @@ defmodule Noisemaker.Driver do
       {pin, nil}
     end
 
-    {:ok, led_even_pin} = GPIO.open(opts[:led_even_pin], :output)
-    {:ok, led_odd_pin} = GPIO.open(opts[:led_odd_pin], :output)
+    {led_even, led_odd} = opts[:led_pins]
+    {:ok, led_even_pin} = GPIO.open(led_even, :output)
+    {:ok, led_odd_pin} = GPIO.open(led_odd, :output)
 
     state = %__MODULE__{
       leds: {led_even_pin, led_odd_pin},
