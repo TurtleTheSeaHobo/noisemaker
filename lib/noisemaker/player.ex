@@ -56,8 +56,9 @@ defmodule Noisemaker.Player do
       :idle -> nil
     end
 
+    vol = Float.round(vol / 100, 3)
     port = Port.open(
-      {:spawn, "aplay -qD pulse #{path}.#{vol}"},
+      {:spawn, "aplay -q #{path}.#{vol}"},
       [:binary, :exit_status]
     )
 
