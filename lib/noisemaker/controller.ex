@@ -45,7 +45,6 @@ defmodule Noisemaker.Controller do
     }
 
     Driver.led(1, 1)
-    Player.volume(state.volume)
 
     {:ok, state}
   end
@@ -79,7 +78,6 @@ defmodule Noisemaker.Controller do
 
   defp volume(state) do
     volume = if state.volume == 100, do: 0, else: state.volume + 25
-    Player.volume(volume)
 
     %__MODULE__{state | volume: volume}
   end
@@ -90,7 +88,7 @@ defmodule Noisemaker.Controller do
       state
     else
       id = n + state.bank * 8
-      Player.play("audio/select_#{id}", fn -> stop_blink() end)
+      Player.play("audio/select_#{id}", state.volume, fn -> stop_blink() end)
 
       start_blink(state)
     end
@@ -105,14 +103,14 @@ defmodule Noisemaker.Controller do
         1 -> say_ip(state)
       end
     else
-      Player.play("audio/star_#{n}", fn -> stop_blink() end)
+      Player.play("audio/star_#{n}", state.volume, fn -> stop_blink() end)
     
       start_blink(state)
     end
   end
 
   defp lever(state) do
-    Player.play("audio/lever", fn -> stop_blink() end)
+    Player.play("audio/lever", state.volume, fn -> stop_blink() end)
 
     start_blink(state)
   end
@@ -155,11 +153,11 @@ defmodule Noisemaker.Controller do
   defp toggle_ftp(state) do
     if state.ftp do
       FTP.suspend()
-      Player.play("audio/ftp_disabled.wav")
+      Player.play("audio/ftp_disabled.wav", state.volume)
       %__MODULE__{state | ftp: false}
     else
       FTP.resume()
-      Player.play("audio/ftp_enabled.wav")
+      Player.play("audio/ftp_enabled.wav", state.volume)
       %__MODULE__{state | ftp: true}
     end
   end
@@ -172,21 +170,21 @@ defmodule Noisemaker.Controller do
                |> List.flatten()
                |> Enum.map(fn x -> "audio/ip/#{x}.wav" end) 
 
-    say(say_list)
+    say(say_list, state.volume)
     state
   end
 
-  defp say(list) do
+  defp say(list, vol) do
     list
     |> Enum.reverse()
-    |> say(nil)
+    |> say(vol, nil)
   end
 
-  defp say([], cb) do
+  defp say([], _vol, cb) do
     cb.()
   end
 
-  defp say([h | t], cb) do
-    say(t, fn -> Player.play(h, cb) end)
+  defp say([h | t], vol, cb) do
+    say(t, fn -> Player.play(h, vol, cb) end)
   end
 end

@@ -15,21 +15,17 @@ defmodule Noisemaker.Player do
     GenServer.start_link(__MODULE__, opts, name: __MODULE__)
   end
 
-  def play(path, cb \\ nil) do
-    GenServer.cast(__MODULE__, {:play, path, cb})
+  def play(path, vol, cb \\ nil) do
+    GenServer.cast(__MODULE__, {:play, path, vol, cb})
   end
 
-  def volume(volume) do
-    GenServer.cast(__MODULE__, {:volume, volume})
-  end
-  
   @impl true
   def init(_opts) do
     {:ok, :idle}
   end
 
   @impl true
-  def handle_cast({:play, path, cb}, state) do
+  def handle_cast({:play, path, vol, cb}, state) do
     case state do
       {:playing, port, _cb} -> 
         {:os_pid, os_pid} = Port.info(port, :os_pid)
@@ -38,17 +34,13 @@ defmodule Noisemaker.Player do
       :idle -> nil
     end
 
+    vol = Float.round(vol / 100, 3)
     port = Port.open(
-      {:spawn, "aplay -q #{path}"}, 
+      {:spawn, "ffmpeg -hide_banner -loglevel error -i #{path} -filter:a \"volume=#{vol}\" -f wav pipe:1 | aplay -q -"}, 
       [:binary, :exit_status]
     )
 
     {:noreply, {:playing, port, cb}}
-  end
-
-  def handle_cast({:volume, volume}, state) do
-    System.cmd("amixer", ["-q", "sset", "Master", "#{volume}%"])
-    {:noreply, state}
   end
 
   @impl true

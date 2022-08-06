@@ -4,7 +4,7 @@ defmodule Noisemaker.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      Noisemaker.Driver,
+      # Noisemaker.Driver,
       Noisemaker.Player,
       Noisemaker.FTP,
       Noisemaker.Controller,
@@ -12,7 +12,7 @@ defmodule Noisemaker.Application do
     opts = [strategy: :one_for_one, name: Noisemaker.Supervisor]
 
     ret = Supervisor.start_link(children, opts)
-    Noisemaker.Player.play("audio/startup_complete.wav")
+    Noisemaker.Player.play("audio/startup_complete.wav", 75)
     ret
   end
 end
