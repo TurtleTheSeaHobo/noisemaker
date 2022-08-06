@@ -42,7 +42,7 @@ defmodule Noisemaker.Player do
         !File.exists?(out) do
       cmd_str = "ffmpeg -i #{file} -filter:a \"volume=#{vol / 100}\" -f wav #{out}"
       IO.puts cmd_str
-      System.shell(cmd_str)
+      Port.open({:spawn, cmd_str}, [:binary])
     end
   end
 
