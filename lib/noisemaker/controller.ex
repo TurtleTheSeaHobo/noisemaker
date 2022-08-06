@@ -42,6 +42,7 @@ defmodule Noisemaker.Controller do
       volume: opts[:initial_volume],
       bank: 0,
       ftp: true,
+      combo: false,
     }
 
     Driver.led(1, 1)
@@ -77,7 +78,7 @@ defmodule Noisemaker.Controller do
 
 
   defp volume(state) do
-    volume = if state.volume == 100, do: 0, else: state.volume + 25
+    volume = if state.volume == 100, do: 25, else: state.volume + 25
 
     %__MODULE__{state | volume: volume}
   end
@@ -88,7 +89,7 @@ defmodule Noisemaker.Controller do
       state
     else
       id = n + state.bank * 8
-      Player.play("audio/select_#{id}", state.volume, fn -> stop_blink() end)
+      Player.play("audio/select_#{id}.wav", state.volume, fn -> stop_blink() end)
 
       start_blink(state)
     end
@@ -103,14 +104,14 @@ defmodule Noisemaker.Controller do
         1 -> say_ip(state)
       end
     else
-      Player.play("audio/star_#{n}", state.volume, fn -> stop_blink() end)
+      Player.play("audio/star_#{n}.wav", state.volume, fn -> stop_blink() end)
     
       start_blink(state)
     end
   end
 
   defp lever(state) do
-    Player.play("audio/lever", state.volume, fn -> stop_blink() end)
+    Player.play("audio/lever.wav", state.volume, fn -> stop_blink() end)
 
     start_blink(state)
   end

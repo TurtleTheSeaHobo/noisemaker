@@ -1,5 +1,6 @@
 defmodule Noisemaker.FTP.Server do
   use GenServer
+  alias Noisemaker.Player
 
   def child_spec(opts) do
     %{
@@ -45,6 +46,7 @@ defmodule Noisemaker.FTP.Server do
       {file_name, notify} ->
         :ok = File.mkdir_p("audio")
         File.write("audio/#{file_name}", data)
+        Task.start(fn -> Player.pregen_audio_files() end)
         send(notify, {:store_complete, file_name, byte_size(data)})
 
         {:reply, :ok, Map.drop(clients, [client_ip])}

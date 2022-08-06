@@ -21,7 +21,29 @@ defmodule Noisemaker.Player do
 
   @impl true
   def init(_opts) do
+    pregen_audio_files()
     {:ok, :idle}
+  end
+  
+  def ls_r(dir) do
+    for x <- File.ls!(dir),
+        path = "#{dir}/#{x}" do
+      if File.dir?(path), do: ls_r(path), else: path
+    end |> List.flatten()
+  end
+
+  def pregen_audio_files() do
+    files = ls_r("audio")
+            |> Enum.filter(fn s -> String.ends_with?(s, ".wav") end)
+
+    for file <- files,
+        vol <- [25, 50, 75, 100],
+        out = "#{file}.#{vol}",
+        !File.exists?(out) do
+      cmd_str = "ffmpeg -i #{file} -filter:a \"volume=#{vol / 100}\" -f wav #{out}"
+      IO.puts cmd_str
+      System.shell(cmd_str)
+    end
   end
 
   @impl true
@@ -34,9 +56,8 @@ defmodule Noisemaker.Player do
       :idle -> nil
     end
 
-    vol = Float.round(vol / 100, 3)
     port = Port.open(
-      {:spawn, "ffmpeg -hide_banner -loglevel error -i #{path} -filter:a \"volume=#{vol}\" -f wav pipe:1 | aplay -q -"}, 
+      {:spawn, "aplay -qD pulse #{path}.#{vol}"},
       [:binary, :exit_status]
     )
 
