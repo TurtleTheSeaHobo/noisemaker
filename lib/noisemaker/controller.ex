@@ -44,6 +44,7 @@ defmodule Noisemaker.Controller do
       ftp: true,
     }
 
+    Driver.led(1, 1)
     Player.volume(state.volume)
 
     {:ok, state}
@@ -68,7 +69,7 @@ defmodule Noisemaker.Controller do
 
   def handle_cast(:stop_blink, state) do
     if state.led_timer do
-      Driver.led(0, 0)
+      Driver.led(1, 1)
       Process.cancel_timer(state.led_timer)
     end
 
@@ -144,7 +145,7 @@ defmodule Noisemaker.Controller do
   end
 
   def start_blink(state) do
-    Driver.led(1, 1)
+    Driver.led(0, 1)
     # 24 Hz = about 42 ms
     timer = Process.send_after(self(), {:cont_blink, {1, 0}}, 42)
     
