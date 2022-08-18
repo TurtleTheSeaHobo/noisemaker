@@ -45,6 +45,11 @@ defmodule Noisemaker.FTP.Server do
     case Map.get(clients, client_ip) do
       {file_name, notify} ->
         :ok = File.mkdir_p("audio")
+
+	File.ls!("audio")
+	|> Enum.filter(&String.starts_with?(&1, file_name))
+	|> Enum.map(&File.rm!(&1))
+
         File.write("audio/#{file_name}", data)
         Task.start(fn -> Player.pregen_audio_files() end)
         send(notify, {:store_complete, file_name, byte_size(data)})
