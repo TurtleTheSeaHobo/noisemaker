@@ -22,7 +22,7 @@ defmodule Noisemaker.Player do
   @impl true
   def init(_opts) do
     pregen_audio_files()
-    {:ok, :idle}
+    {:ok, %{}}
   end
   
   def ls_r(dir) do
@@ -48,25 +48,26 @@ defmodule Noisemaker.Player do
 
   @impl true
   def handle_cast({:play, path, vol, cb}, state) do
-    case state do
-      {:playing, port, _cb} -> 
-        {:os_pid, os_pid} = Port.info(port, :os_pid)
-        Port.close(port)
-        System.cmd("kill", ["#{os_pid}"]) 
-      :idle -> nil
-    end
+    #case state do
+    #  {:playing, port, _cb} -> 
+    #    {:os_pid, os_pid} = Port.info(port, :os_pid)
+    #    Port.close(port)
+    #    System.cmd("kill", ["#{os_pid}"]) 
+    #  :idle -> nil
+    #end
 
     port = Port.open(
       {:spawn, "aplay -q #{path}.#{vol}"},
       [:binary, :exit_status]
     )
 
-    {:noreply, {:playing, port, cb}}
+    {:noreply, %{state | port => cb}}
   end
 
   @impl true
-  def handle_info({port, {:exit_status, 0}}, {:playing, port, cb}) do
+  def handle_info({port, {:exit_status, 0}}, state) do
+    {cb, state} = Map.pop(state, port)
     if cb, do: cb.()
-    {:noreply, :idle}
+    {:noreply, state}
   end
 end
