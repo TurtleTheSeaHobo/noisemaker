@@ -70,6 +70,7 @@ defmodule Noisemaker.Player do
 
   def handle_cast(:stop_all, state) do
     System.cmd("killall", ["aplay"]) 
+    {:noreply, state}
   end
 
   @impl true
