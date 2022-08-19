@@ -61,7 +61,7 @@ defmodule Noisemaker.Player do
       [:binary, :exit_status]
     )
 
-    {:noreply, %{state | port => cb}}
+    {:noreply, Map.put(state, port, cb)}
   end
 
   @impl true
