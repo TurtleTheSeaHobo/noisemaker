@@ -48,7 +48,7 @@ defmodule Noisemaker.FTP.Server do
 
 	File.ls!("audio")
 	|> Enum.filter(&String.starts_with?(&1, file_name))
-	|> Enum.map(&File.rm!(&1))
+	|> Enum.map(&File.rm!("audio/#{&1}"))
 
         File.write("audio/#{file_name}", data)
         Task.start(fn -> Player.pregen_audio_files() end)
