@@ -12,7 +12,7 @@ defmodule Noisemaker.Application do
     opts = [strategy: :one_for_one, name: Noisemaker.Supervisor]
 
     ret = Supervisor.start_link(children, opts)
-    Noisemaker.Player.play("audio/startup_complete.wav", 75)
+    Noisemaker.Player.play("audio/startup_completed.wav", 75)
     ret
   end
 end
