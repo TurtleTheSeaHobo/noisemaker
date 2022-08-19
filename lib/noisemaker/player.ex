@@ -19,6 +19,10 @@ defmodule Noisemaker.Player do
     GenServer.cast(__MODULE__, {:play, path, vol, cb})
   end
 
+  def stop_all() do
+    GenServer.cast(__MODULE__, :stop_all)
+  end
+
   @impl true
   def init(_opts) do
     pregen_audio_files()
@@ -62,6 +66,14 @@ defmodule Noisemaker.Player do
     )
 
     {:noreply, Map.put(state, port, cb)}
+  end
+
+  def handle_cast(:stop_all, state) do
+    for {port, _cb} <- state do
+      {:os_pid, os_pid} = Port.info(port, :os_pid)
+      Port.close(port)
+      System.cmd("kill", ["#{os_pid}"]) 
+    end 
   end
 
   @impl true

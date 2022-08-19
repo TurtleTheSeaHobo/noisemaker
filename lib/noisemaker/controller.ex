@@ -111,7 +111,7 @@ defmodule Noisemaker.Controller do
   end
 
   defp lever(state) do
-    Player.play("audio/lever.wav", state.volume, fn -> stop_blink() end)
+    Player.stop_all()
 
     start_blink(state)
   end
