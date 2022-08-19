@@ -7,7 +7,7 @@ defmodule Noisemaker.Driver do
     #select_pins: [4, 5, 6, 7, 8, 9, 10, 11, 22, 23],
     #volume_pin: 12,
     #mode_pin: 13,
-    button_pins: [4, 5, 6, 22, 27, 9, 10, 11, 12, 13, 16, 22, 23],
+    button_pins: [4, 5, 6, 22, 27, 9, 10, 11, 12, 13, 16, 17, 23],
     led_pins: {24, 25}, 
   ]
 
@@ -20,11 +20,11 @@ defmodule Noisemaker.Driver do
     9  => {:select, 5},
     10 => {:select, 6},
     11 => {:select, 7},
+    12 => {:star, 0},
+    13 => {:star, 1},
+    16 => :lever,
     17 => :volume,
     23 => :mode_select,
-    16 => :lever,
-    13 => {:star, 0},
-    12 => {:star, 1},
   }
 
   defstruct [:leds, :timers, :buttons]
