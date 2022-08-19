@@ -20,11 +20,11 @@ defmodule Noisemaker.Driver do
     9  => {:select, 5},
     10 => {:select, 6},
     11 => {:select, 7},
-    12 => :volume,
-    13 => :mode_select,
+    17 => :volume,
+    23 => :mode_select,
     16 => :lever,
-    22 => {:star, 0},
-    23 => {:star, 1},
+    13 => {:star, 0},
+    12 => {:star, 1},
   }
 
   defstruct [:leds, :timers, :buttons]
