@@ -69,8 +69,9 @@ defmodule Noisemaker.Player do
   end
 
   def handle_cast(:stop_all, state) do
+    for {port, _cb} <- state, do: Port.close(port)
     System.cmd("killall", ["aplay"]) 
-    {:noreply, state}
+    {:noreply, %{}}
   end
 
   @impl true
